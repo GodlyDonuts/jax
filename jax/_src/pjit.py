@@ -511,7 +511,7 @@ def _trace_for_jit(
   in_shardings_flat, in_layouts_flat = _process_in_axis_resources(
       in_shardings_treedef, in_shardings_leaves,
       ji.in_layouts_treedef, ji.in_layouts_leaves,
-      ak, dbg, device_or_backend_set)
+      ak, dbg, device_or_backend_set, has_kwargs)
 
   qdd_token = None # _qdd_cache_index(fun, tuple(in_type))
 
@@ -740,8 +740,11 @@ def _create_sharding_with_device_backend(device, backend):
 def _process_in_axis_resources(in_shardings_treedef, in_shardings_leaves,
                                in_layouts_treedef, in_layouts_leaves,
                                in_avals, dbg: core.DebugInfo,
-                               device_or_backend_set):
+                               device_or_backend_set, kw):
   in_tree = in_avals.tree_without_statics
+  if not kw:
+    # TODO(dougal): this seems like a hack
+    in_tree, _ = treedef_children(in_tree)
   orig_in_shardings = tree_unflatten(in_shardings_treedef, in_shardings_leaves)
   # Only do this if original in_shardings are unspecified.
   if isinstance(orig_in_shardings, UnspecifiedValue):
